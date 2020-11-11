@@ -4,3 +4,7 @@ services:
     image: redis
     ports:
       - "6379:6379"
+  site:
+    build: ./site
+    ports:
+      - "80:5000"
