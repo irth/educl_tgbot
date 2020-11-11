@@ -43,16 +43,19 @@ class EduCLWorker:
                     self.handle_logout(payload)
 
     def handle_login_info(self, payload):
-        print("LOGIN", payload)
         session = EduCL()
         ok = session.login(payload['username'], payload['password'])
         if ok:
             self.active_sessions[payload['chat_id']] = session
-            chat = Chat(
-                chat_id=payload['chat_id'],
-                active=True
-            )
-            self.db.add(chat)
+            chat = self.db.query(Chat).filter(
+                Chat.chat_id == str(payload['chat_id'])).first()
+            if chat is None:
+                chat = Chat(
+                    chat_id=payload['chat_id'],
+                    active=True)
+                self.db.add(chat)
+            else:
+                chat.active = True
             self.db.commit()
         self.r.publish("login_results", json.dumps({
             "success": ok,
