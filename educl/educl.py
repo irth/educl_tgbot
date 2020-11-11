@@ -36,9 +36,12 @@ class EduCL:
             **hidden,
         })
 
-        # TODO: check if successfull
-        self._last_messages_url = self._get_messages_url(bs(r))
-        self._logged_in = True
+        soup = bs(r)
+        success = soup.find('td', class_='ZALOGOWANY_GRAF') is not None
+        if success:
+            self._last_messages_url = self._get_messages_url(bs(r))
+            self._logged_in = True
+        return success
 
     def fetch_messages(self):
         if not self._logged_in:
