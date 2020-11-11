@@ -1,33 +1,38 @@
+from educl import EduCL
 import redis
 import time
 import os
 import json
 
-from educl import EduCL
+from sqlalchemy import create_engine, Column, Integer, String, Boolean
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-r = redis.Redis(host=os.environ.get('REDIS_HOST', "localhost"),
-                port=os.environ.get('REDIS_PORT', 6379), db=0)
-
-pubsub = r.pubsub()
-pubsub.subscribe("login_info")
+DBBase = declarative_base()
 
 
-active_sessions = {}
+class Chat(DBBase):
+    __tablename__ = 'chats'
+    id = Column(Integer, primary_key=True)
+    chat_id = Column(String(64))
+    active = Column(Boolean)
 
 
 class EduCLWorker:
     def __init__(self):
         self.active_sessions = {}
-        self.r = None
-        self.pubsub = None
+        self.r = redis.Redis(host=os.environ.get('REDIS_HOST', "localhost"),
+                             port=os.environ.get('REDIS_PORT', 6379), db=0)
+        self.pubsub = self.r.pubsub()
+        self.pubsub.subscribe("login_info")
+        self.db_engine = create_engine('sqlite:///sqlite.db', echo=True)
+        DBBase.metadata.create_all(self.db_engine)
+        self.db = sessionmaker(bind=self.db_engine)()
 
     def run(self):
-        self.r = redis.Redis(host=os.environ['REDIS_HOST'],
-                             port=os.environ.get('REDIS_PORT', 6379), db=0)
-        self.pubsub = r.pubsub()
         while True:
             time.sleep(0.001)
-            message = pubsub.get_message()
+            message = self.pubsub.get_message()
             if message:
                 if message['type'] != 'message':
                     continue
@@ -41,7 +46,13 @@ class EduCLWorker:
         ok = session.login(payload['username'], payload['password'])
         if ok:
             self.active_sessions[payload['chat_id']] = session
-        r.publish("login_results", json.dumps({
+            chat = Chat(
+                chat_id=payload['chat_id'],
+                active=True
+            )
+            self.db.add(chat)
+            self.db.commit()
+        self.r.publish("login_results", json.dumps({
             "success": ok,
             "chat_id": payload['chat_id'],
         }))
