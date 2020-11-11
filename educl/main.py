@@ -24,7 +24,7 @@ class EduCLWorker:
         self.r = redis.Redis(host=os.environ.get('REDIS_HOST', "localhost"),
                              port=os.environ.get('REDIS_PORT', 6379), db=0)
         self.pubsub = self.r.pubsub()
-        self.pubsub.subscribe("login_info")
+        self.pubsub.subscribe("login_info", "logout")
         self.db_engine = create_engine('sqlite:///sqlite.db', echo=True)
         DBBase.metadata.create_all(self.db_engine)
         self.db = sessionmaker(bind=self.db_engine)()
@@ -39,6 +39,8 @@ class EduCLWorker:
                 payload = json.loads(message['data'])
                 if message['channel'] == b'login_info':
                     self.handle_login_info(payload)
+                if message['channel'] == b'logout':
+                    self.handle_logout(payload)
 
     def handle_login_info(self, payload):
         print("LOGIN", payload)
@@ -56,6 +58,14 @@ class EduCLWorker:
             "success": ok,
             "chat_id": payload['chat_id'],
         }))
+
+    def handle_logout(self, payload):
+        self.active_sessions.pop(payload['chat_id'], None)
+        self.db.query(Chat).filter(
+            Chat.chat_id == str(payload['chat_id'])).delete()
+        self.db.commit()
+        self.r.publish("logout_results", json.dumps(
+            {"chat_id": payload['chat_id'], "success": True}))
 
 
 EduCLWorker().run()

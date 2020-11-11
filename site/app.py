@@ -36,7 +36,7 @@ def finish(token):
     r.publish("login_info", json.dumps({
         "username": request.form['username'],
         "password": request.form['password'],
-        "chat_id": chat_id.decode('utf-8')
+        "chat_id": int(chat_id)
     }))
     return render_template('done.html')
 
