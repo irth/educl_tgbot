@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-requests = "*"
-beautifulsoup4 = "*"
+flask = "*"
+redis = "*"
 
 [dev-packages]
 autopep8 = "*"

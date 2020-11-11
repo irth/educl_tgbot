@@ -1,0 +1,15 @@
+{% extends "_skel.html" %}
+{% block body %}
+<h1>Log in</h1>
+<div style="text-align: center; padding-bottom: 1em;">
+    <form action="/finish/{{token}}" method="POST" style="text-align: left">
+        <fieldset>
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" placeholder="Your Edukacja.CL/JSOS username">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Your Edukacja.CL/JSOS password">
+            <input type="submit" value="Log in" style="display: block; margin: 0 auto;">
+        </fieldset>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "_skel.html" %}
+{% block body %}
+<h1>Log in</h1>
+<h3>Warning</h3>
+<p>You are about to share your Edukacja.CL log in data with the app. Make sure you trust me (the author of
+    the app) and understand the risk. I will not store the log in data after establishing a session, instead, the
+    bot will ask you to re-login whenever necessary. However, someone could still intercept your password in case of
+    a security breach. I do not guarantee anything. Proceed at your own risk.</p>
+<div style="text-align: center; padding-bottom: 1em;">
+    <form action="/continue/{{token}}" method="POST">
+        <input type="submit" style="background-color: red; border-color: red" value="I
+                      understand">
+    </form>
+</div>
+{% endblock %}
